@@ -1,17 +1,52 @@
-import React from 'react';
+import * as esbuild from 'esbuild-wasm';
+import { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import { unpkgPathPlugin } from './plugins/unpkg-path-plugin';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+const App = () => {
+  const ref = useRef<any>();
+  const [input, setInput] = useState('');
+  const [code, setCode] = useState('');
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+  const startService = async () => {
+    ref.current = await esbuild.startService({
+      worker: true,
+      wasmURL: '/esbuild.wasm' // copied from node_modules and placed in plublic folder
+    });
+  }
+
+  useEffect(() => {
+    startService()
+  }, [])
+
+  const onClick = async () => {
+    if (!ref.current) return;
+
+    const result = await ref.current.build({
+      entryPoints: ['index.js'],
+      bundle: true,
+      write: false,
+      plugins: [unpkgPathPlugin()]
+    })
+    console.log(result);
+
+    // BELOW transpiles only so it will handle a lot, but if you
+    // type an import React from 'react' it won't handle that bundling
+    // const result = await ref.current.transform(input, {
+    //   loader: 'jsx',
+    //   target: 'es2015'
+    // });
+    setCode(result.outputFiles[0].text);
+  }
+  return (
+    <div>
+      <textarea value={input} onChange={(e) => setInput(e.target.value)}></textarea>
+      <div>
+        <button onClick={onClick}>Submit</button>
+      </div>
+      <pre>{code}</pre>
+    </div>
+  );
+};
+
+ReactDOM.render(<App />, document.querySelector('#root'));

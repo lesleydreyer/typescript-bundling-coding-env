@@ -1,0 +1,13 @@
+/**
+ * transpiling/bundling remote vs locally
+ * remote 
+ * - cache downloaded npm modules to bundle code faster
+ * - works better for users with slower devices or limited internet connections
+ * local
+ * - removes an extra request to api server for faster code exection
+ * - don't have to maintain an api server
+ * - less complexity - no code back/forth 
+ * 
+ * npm view react dist.tarball
+ * shows link to download package from npm registry
+ */
